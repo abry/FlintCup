@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { sanityFetch } from "@/sanity/fetch";
-import { siteSettingsQuery } from "@/sanity/queries";
+import { siteSettingsQuery, tournamentQuery } from "@/sanity/queries";
 
 type SiteSettings = {
   title: string | null;
@@ -12,13 +12,20 @@ type SiteSettings = {
   accentColor: string | null;
 } | null;
 
+type Tournament = {
+  name: string | null;
+  groupName: string | null;
+  ourTeamName: string | null;
+  startDate: string | null;
+} | null;
+
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await sanityFetch<SiteSettings>(siteSettingsQuery);
   const title = settings?.title ?? "Sprint-Jeløy G14-2 — Flint Cup 2026";
   return {
     title,
     description:
-      "Lagprogram for Sprint-Jeløy 2 i Flint Cup 2026: kamper, oppmøte, kjøring og overnatting.",
+      "Matchday-programme for Sprint-Jeløy 2 i Flint Cup 2026: kamper, oppmøte, kjøring og overnatting.",
   };
 }
 
@@ -26,80 +33,83 @@ const NAV = [
   { href: "/", label: "Hjem" },
   { href: "/program", label: "Program" },
   { href: "/kamper", label: "Kamper" },
-  { href: "/innkvartering", label: "Innkvartering" },
+  { href: "/innkvartering", label: "Husvik" },
   { href: "/laget", label: "Laget" },
 ];
+
+const ISSUE_DATE = new Date("2026-05-23T08:00:00+02:00");
 
 export default async function SiteLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const settings = await sanityFetch<SiteSettings>(siteSettingsQuery);
-  const primary = settings?.primaryColor ?? "#0a2342";
-  const accent = settings?.accentColor ?? "#f59e0b";
-  const title = settings?.title ?? "Sprint-Jeløy G14-2 — Flint Cup 2026";
+  const [settings, tournament] = await Promise.all([
+    sanityFetch<SiteSettings>(siteSettingsQuery),
+    sanityFetch<Tournament>(tournamentQuery),
+  ]);
+
   const club = settings?.clubName ?? "Sprint-Jeløy Fotballklubb";
+  const teamLabel = tournament?.ourTeamName ?? "Sprint-Jeløy 2";
+  const groupLabel = tournament?.groupName ?? "Gruppe L";
+  const issueLabel = ISSUE_DATE.toLocaleDateString("nb-NO", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
   return (
     <>
-      <style>{`
-        :root {
-          --color-primary: ${primary};
-          --color-accent: ${accent};
-        }
-      `}</style>
-      <header
-        className="text-white"
-        style={{
-          background: `linear-gradient(180deg, ${primary} 0%, ${shade(primary, 12)} 100%)`,
-        }}
-      >
-        <div className="container-page py-5 flex items-center gap-3">
-          {settings?.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={settings.logoUrl}
-              alt={club}
-              className="h-10 w-10 rounded-full bg-white/10 object-contain p-1"
-            />
-          ) : (
-            <span
-              className="h-10 w-10 rounded-full bg-white/15 flex items-center justify-center font-black text-base"
-              style={{ color: accent }}
-              aria-hidden
-            >
-              SJ
-            </span>
-          )}
-          <div className="flex-1 min-w-0">
-            <div className="text-[11px] uppercase tracking-[0.18em] text-white/70">
-              {club}
-            </div>
-            <h1 className="text-base font-semibold leading-tight truncate">
-              {title}
-            </h1>
+      <header className="border-b border-[color:var(--rule)]">
+        <div className="container-page pt-7 pb-5">
+          <div className="flex items-center justify-between gap-3 text-[10px] tracking-[0.28em] uppercase text-[color:var(--ink-mute)]">
+            <span>Vol. 1 · No. 1</span>
+            <span>{issueLabel}</span>
           </div>
+          <hr className="rule-double mt-3 mb-5" />
+          <div className="flex items-end justify-between gap-4">
+            <div className="min-w-0">
+              <div className="label">{club}</div>
+              <h1 className="display-italic mt-1 text-[clamp(2.6rem,9vw,4.2rem)]">
+                Flint Cup
+                <span className="display-roman not-italic ember-text">
+                  &thinsp;2026
+                </span>
+              </h1>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-[color:var(--ink-soft)]">
+                <span className="smallcaps text-xs">Matchday programme</span>
+                <span className="text-[color:var(--rule)]">·</span>
+                <span className="font-medium">{teamLabel}</span>
+                <span className="text-[color:var(--rule)]">·</span>
+                <span>{groupLabel}</span>
+              </div>
+            </div>
+            <CrestBadge logoUrl={settings?.logoUrl ?? null} />
+          </div>
+          <hr className="rule mt-5" />
+          <nav className="mt-3">
+            <ul className="flex gap-x-5 gap-y-2 flex-wrap text-[13px]">
+              {NAV.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="link-edit smallcaps text-xs"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
         </div>
-        <nav className="container-page pb-3 -mt-1">
-          <ul className="flex gap-1 overflow-x-auto text-sm">
-            {NAV.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors whitespace-nowrap"
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
       </header>
-      <main className="flex-1 container-page py-6">{children}</main>
-      <footer className="border-t border-line bg-surface/60 text-xs text-muted">
-        <div className="container-page py-6 flex flex-wrap gap-2 justify-between">
-          <span>{club} · Flint Cup 2026</span>
-          <Link href="/studio" className="underline-offset-2 hover:underline">
-            Studio
+      <main className="flex-1 container-page py-8 sm:py-12">{children}</main>
+      <footer className="mt-12 border-t border-[color:var(--rule)]">
+        <div className="container-page py-8 text-[11px] tracking-[0.16em] uppercase text-[color:var(--ink-mute)] flex flex-wrap justify-between gap-3">
+          <span>
+            Trykt for {club} · {teamLabel}
+          </span>
+          <Link href="/studio" className="link-edit">
+            Redaksjon →
           </Link>
         </div>
       </footer>
@@ -107,15 +117,67 @@ export default async function SiteLayout({
   );
 }
 
-function shade(hex: string, amount: number): string {
-  const clean = hex.replace("#", "");
-  if (clean.length !== 6) return hex;
-  const r = parseInt(clean.slice(0, 2), 16);
-  const g = parseInt(clean.slice(2, 4), 16);
-  const b = parseInt(clean.slice(4, 6), 16);
-  const lighten = (c: number) =>
-    Math.min(255, Math.round(c + (255 - c) * (amount / 100)));
-  return `#${[lighten(r), lighten(g), lighten(b)]
-    .map((v) => v.toString(16).padStart(2, "0"))
-    .join("")}`;
+function CrestBadge({ logoUrl }: { logoUrl: string | null }) {
+  if (logoUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={logoUrl}
+        alt=""
+        className="h-16 w-16 object-contain"
+      />
+    );
+  }
+  return (
+    <svg
+      viewBox="0 0 64 64"
+      className="h-16 w-16 shrink-0"
+      aria-hidden
+    >
+      <defs>
+        <linearGradient id="crest" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="var(--navy)" />
+          <stop offset="100%" stopColor="var(--navy-deep)" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M32 2 L62 12 L62 30 C62 46 50 58 32 62 C14 58 2 46 2 30 L2 12 Z"
+        fill="url(#crest)"
+        stroke="var(--ink)"
+        strokeWidth="1.5"
+      />
+      <path
+        d="M32 2 L62 12 L62 30 C62 46 50 58 32 62 C14 58 2 46 2 30 L2 12 Z"
+        fill="none"
+        stroke="var(--ember)"
+        strokeWidth="0.6"
+        transform="scale(0.84) translate(6.1 6.1)"
+      />
+      <text
+        x="32"
+        y="38"
+        textAnchor="middle"
+        fontFamily="var(--font-display)"
+        fontStyle="italic"
+        fontWeight="600"
+        fontSize="20"
+        fill="var(--chalk)"
+        letterSpacing="-0.04em"
+      >
+        SJ
+      </text>
+      <text
+        x="32"
+        y="52"
+        textAnchor="middle"
+        fontFamily="var(--font-sans)"
+        fontWeight="700"
+        fontSize="5"
+        letterSpacing="0.36em"
+        fill="var(--ember-soft)"
+      >
+        1926
+      </text>
+    </svg>
+  );
 }

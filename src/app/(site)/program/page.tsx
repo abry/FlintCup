@@ -7,16 +7,23 @@ export const revalidate = 60;
 export default async function ProgramPage() {
   const entries = await sanityFetch<TimelineEntry[]>(scheduleQuery);
   return (
-    <div className="space-y-6">
-      <header>
-        <p className="text-xs uppercase tracking-[0.18em] text-muted">
-          Program
-        </p>
-        <h2 className="text-3xl font-semibold tracking-tight">
-          Hele dagen, time for time
+    <article className="space-y-8">
+      <header className="rise">
+        <span className="label">Sak 01</span>
+        <h2
+          className="display-italic mt-2 text-[clamp(2.25rem,7.5vw,3.25rem)]"
+          style={{ fontVariationSettings: '"opsz" 144, "wght" 380' }}
+        >
+          Programmet
         </h2>
+        <p className="mt-3 max-w-md text-[15px] text-[color:var(--ink-soft)] leading-relaxed">
+          Hele dagen, time for time. Auto-genererte oppmøter står i kursiv;
+          alt annet kan redigeres fritt i Studio uten å miste de automatiske
+          punktene.
+        </p>
+        <hr className="rule-double mt-6" />
       </header>
       <Timeline entries={entries} />
-    </div>
+    </article>
   );
 }

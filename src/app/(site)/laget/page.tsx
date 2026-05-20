@@ -22,58 +22,88 @@ export default async function TeamPage() {
   const players = await sanityFetch<Player[]>(playersQuery);
 
   return (
-    <div className="space-y-6">
-      <header>
-        <p className="text-xs uppercase tracking-[0.18em] text-muted">Laget</p>
-        <h2 className="text-3xl font-semibold tracking-tight">
-          Spillere og foreldre
+    <article className="space-y-8">
+      <header className="rise">
+        <span className="label">Sak 04</span>
+        <h2
+          className="display-italic mt-2 text-[clamp(2.25rem,7.5vw,3.25rem)]"
+          style={{ fontVariationSettings: '"opsz" 144, "wght" 380' }}
+        >
+          Mannskapet
         </h2>
-      </header>
-      {players.length === 0 ? (
-        <p className="text-sm text-muted">
-          Spillerlisten er ikke lagt inn ennå. Trener legger inn navn,
-          draktnummer og foreldrekontakter i Studio.
+        <p className="mt-3 max-w-md text-[15px] text-[color:var(--ink-soft)] leading-relaxed">
+          Stallen og foreldrekontakter for {players.length || "—"}{" "}
+          spillere. Trykk på nummer for å ringe.
         </p>
+        <hr className="rule-double mt-6" />
+      </header>
+
+      {players.length === 0 ? (
+        <div className="programme-card p-6 text-center">
+          <span className="stamp">Tomt rosterskap</span>
+          <p className="font-display italic text-xl mt-3">
+            Trener legger spillerne inn i Studio.
+          </p>
+        </div>
       ) : (
-        <ul className="space-y-3">
-          {players.map((p) => (
-            <li key={p._id} className="card p-4">
-              <div className="flex items-baseline gap-3">
-                {p.shirtNumber !== null ? (
-                  <span className="text-2xl font-black tabular-nums text-[color:var(--color-primary)]">
-                    {p.shirtNumber}
-                  </span>
-                ) : null}
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold truncate">{p.name}</div>
+        <ol className="space-y-0">
+          {players.map((p, i) => (
+            <li
+              key={p._id}
+              className="border-b border-[color:var(--rule-soft)] py-5 rise"
+              style={{ animationDelay: `${i * 30}ms` }}
+            >
+              <div className="grid grid-cols-[3.5rem_1fr] gap-4 items-baseline">
+                <span className="display-italic num text-4xl tabular-nums text-[color:var(--ember)]">
+                  {p.shirtNumber !== null
+                    ? String(p.shirtNumber).padStart(2, "0")
+                    : "—"}
+                </span>
+                <div className="min-w-0">
+                  <div
+                    className="font-display text-xl tracking-[-0.01em]"
+                    style={{ fontVariationSettings: '"opsz" 36, "wght" 560' }}
+                  >
+                    {p.name}
+                  </div>
                   {p.position ? (
-                    <div className="text-xs text-muted">{p.position}</div>
+                    <div className="smallcaps text-[10.5px] text-[color:var(--ink-mute)] mt-0.5">
+                      {p.position}
+                    </div>
+                  ) : null}
+                  {p.parents && p.parents.length > 0 ? (
+                    <ul className="mt-2 space-y-0.5 text-sm">
+                      {p.parents.map((parent, j) => (
+                        <li
+                          key={j}
+                          className="flex flex-wrap gap-x-3 text-[color:var(--ink-mute)]"
+                        >
+                          <span className="text-[color:var(--ink)] font-medium">
+                            {parent.name ?? "—"}
+                          </span>
+                          {parent.phone ? (
+                            <a
+                              href={`tel:${parent.phone}`}
+                              className="num link-edit"
+                            >
+                              {parent.phone}
+                            </a>
+                          ) : null}
+                          {parent.carSeats ? (
+                            <span className="num">
+                              {parent.carSeats} bilplasser
+                            </span>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
                   ) : null}
                 </div>
               </div>
-              {p.parents && p.parents.length > 0 ? (
-                <ul className="mt-3 space-y-1 text-sm">
-                  {p.parents.map((parent, i) => (
-                    <li key={i} className="flex flex-wrap gap-x-3 text-muted">
-                      <span className="font-medium text-foreground">
-                        {parent.name ?? "—"}
-                      </span>
-                      {parent.phone ? (
-                        <a href={`tel:${parent.phone}`} className="hover:underline">
-                          {parent.phone}
-                        </a>
-                      ) : null}
-                      {parent.carSeats ? (
-                        <span>{parent.carSeats} bilplasser</span>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
             </li>
           ))}
-        </ul>
+        </ol>
       )}
-    </div>
+    </article>
   );
 }

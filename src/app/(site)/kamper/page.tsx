@@ -26,25 +26,41 @@ export default async function MatchesPage() {
   const allMatches = groupMatches.length > 0 ? groupMatches : ourMatches;
 
   return (
-    <div className="space-y-6">
-      <header>
-        <p className="text-xs uppercase tracking-[0.18em] text-muted">
-          {groupName}
+    <article className="space-y-8">
+      <header className="rise">
+        <span className="label">Sak 02</span>
+        <h2
+          className="display-italic mt-2 text-[clamp(2.25rem,7.5vw,3.25rem)]"
+          style={{ fontVariationSettings: '"opsz" 144, "wght" 380' }}
+        >
+          Gruppespillet
+        </h2>
+        <p className="mt-3 max-w-md text-[15px] text-[color:var(--ink-soft)] leading-relaxed">
+          {groupName} samler åtte lag på lørdag. Resultater hentes inn
+          automatisk fra Profixio mens kampene spilles.
         </p>
-        <h2 className="text-3xl font-semibold tracking-tight">Kamper</h2>
+        <hr className="rule-double mt-6" />
       </header>
       {allMatches.length === 0 ? (
-        <p className="text-sm text-muted">
-          Ingen kamper synket ennå. Auto-synk fra Profixio går hvert 10. minutt
-          under turneringen.
-        </p>
+        <div className="programme-card p-6 space-y-2 text-center">
+          <span className="stamp">Tomt</span>
+          <p className="font-display italic text-xl mt-2">
+            Auto-synk fra Profixio hvert 10. minutt under turneringen.
+          </p>
+        </div>
       ) : (
-        <div className="space-y-3">
-          {allMatches.map((m) => (
-            <MatchCard key={m._id} match={m} />
+        <div className="space-y-4">
+          {allMatches.map((m, i) => (
+            <div
+              key={m._id}
+              className="rise"
+              style={{ animationDelay: `${i * 60}ms` }}
+            >
+              <MatchCard match={m} />
+            </div>
           ))}
         </div>
       )}
-    </div>
+    </article>
   );
 }
