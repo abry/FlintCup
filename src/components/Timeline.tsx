@@ -20,6 +20,7 @@ export type TimelineEntry = {
     awayTeam?: string | null;
     weAre?: string | null;
     pitch?: string | null;
+    venueName?: string | null;
     homeScore?: number | null;
     awayScore?: number | null;
     venue?: { shortName?: string | null; name?: string | null } | null;
@@ -78,12 +79,23 @@ function TimelineRow({ entry, index }: { entry: TimelineEntry; index: number }) 
   const isMatch = entry.type === "match";
   const isOurMatch = entry.match?.weAre === "home" || entry.match?.weAre === "away";
 
+  const matchVenueLabel = entry.match
+    ? [
+        entry.match.venue?.shortName ??
+          entry.match.venue?.name ??
+          entry.match.venueName ??
+          null,
+        entry.match.pitch ? `bane ${entry.match.pitch}` : null,
+      ]
+        .filter(Boolean)
+        .join(" · ")
+    : "";
   const where =
-    entry.match?.venue?.shortName ??
-    entry.venue?.shortName ??
-    entry.venue?.name ??
-    entry.school?.name ??
-    (entry.match?.pitch ? `bane ${entry.match.pitch}` : null);
+    matchVenueLabel ||
+    entry.venue?.shortName ||
+    entry.venue?.name ||
+    entry.school?.name ||
+    null;
 
   return (
     <li

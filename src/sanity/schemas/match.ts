@@ -62,15 +62,22 @@ export const match = defineType({
       initialValue: "home",
     }),
     defineField({
-      name: "venue",
-      title: "Bane",
-      type: "reference",
-      to: [{ type: "venue" }],
+      name: "venueName",
+      title: "Anlegg",
+      type: "string",
+      description: 'F.eks. "Frint ESSO Arena" eller "Tønsberg Gressbane". Hentes fra Profixio.',
     }),
     defineField({
       name: "pitch",
-      title: "Pitch / banenr. (fallback hvis venue mangler)",
+      title: "Banenr.",
       type: "string",
+    }),
+    defineField({
+      name: "venue",
+      title: "Bane-referanse (valgfri)",
+      type: "reference",
+      to: [{ type: "venue" }],
+      description: "Bruk hvis du vil lenke til en `venue` med adresse/koordinater.",
     }),
     defineField({
       name: "groupName",

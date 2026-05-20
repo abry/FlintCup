@@ -17,6 +17,8 @@ export type ScrapedMatch = {
 
 const TIMESTAMP_RE = /timestamp:\s*(\d+)/;
 const HREF_MATCH_ID_RE = /\/match\/(\d+)/;
+const TIME_RE = /^([01]?\d|2[0-3]):([0-5]\d)$/;
+const OSLO_OFFSET_FALLBACK_MS = 2 * 60 * 60 * 1000;
 
 export async function fetchGroupMatches(groupUrl: string): Promise<ScrapedMatch[]> {
   const res = await fetch(groupUrl, {
@@ -76,7 +78,16 @@ export function parseGroupHtml(html: string): ScrapedMatch[] {
       }
     });
 
-    const kickoff = new Date(timestamp * 1000).toISOString();
+    let timeText: string | null = null;
+    $li.find("div").each((_, el) => {
+      if (timeText) return;
+      const $el = $(el);
+      if ($el.children().length > 0) return;
+      const t = $el.text().trim();
+      if (TIME_RE.test(t)) timeText = t;
+    });
+
+    const kickoff = composeKickoff(timestamp, timeText);
 
     matches.push({
       externalId,
@@ -99,4 +110,39 @@ export function filterTeamMatches(matches: ScrapedMatch[], teamName: string): Sc
   return matches.filter(
     (m) => m.homeTeam === teamName || m.awayTeam === teamName,
   );
+}
+
+function composeKickoff(timestamp: number, timeText: string | null): string {
+  const dayStartMs = timestamp * 1000;
+  if (!timeText) return new Date(dayStartMs).toISOString();
+  const match = timeText.match(TIME_RE);
+  if (!match) return new Date(dayStartMs).toISOString();
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  const dayDate = new Date(dayStartMs);
+  const y = dayDate.getUTCFullYear();
+  const m = dayDate.getUTCMonth();
+  const d = dayDate.getUTCDate();
+  const utcGuess = Date.UTC(y, m, d, hour, minute, 0);
+  const offsetMs = osloOffsetMs(utcGuess);
+  return new Date(utcGuess - offsetMs).toISOString();
+}
+
+function osloOffsetMs(utcMs: number): number {
+  try {
+    const fmt = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Europe/Oslo",
+      timeZoneName: "shortOffset",
+    });
+    const parts = fmt.formatToParts(new Date(utcMs));
+    const tz = parts.find((p) => p.type === "timeZoneName")?.value ?? "";
+    const m = tz.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/);
+    if (!m) return OSLO_OFFSET_FALLBACK_MS;
+    const sign = m[1] === "-" ? -1 : 1;
+    const hours = Number(m[2]);
+    const minutes = Number(m[3] ?? "0");
+    return sign * (hours * 60 + minutes) * 60 * 1000;
+  } catch {
+    return OSLO_OFFSET_FALLBACK_MS;
+  }
 }

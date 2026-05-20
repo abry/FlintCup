@@ -8,6 +8,7 @@ export type MatchCardData = {
   awayTeam: string;
   weAre: "home" | "away" | "none";
   pitch: string | null;
+  venueName: string | null;
   homeScore: number | null;
   awayScore: number | null;
   venue: { name: string | null; shortName: string | null } | null;
@@ -22,11 +23,12 @@ type Props = {
 export function MatchCard({ match, emphasis = "default" }: Props) {
   const isOurs = match.weAre !== "none";
   const ourHome = match.weAre === "home";
-  const venueLabel =
-    match.venue?.shortName ??
-    [match.venue?.name, match.pitch ? `bane ${match.pitch}` : null]
-      .filter(Boolean)
-      .join(", ");
+  const venueLabel = [
+    match.venue?.shortName ?? match.venue?.name ?? match.venueName ?? null,
+    match.pitch ? `bane ${match.pitch}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   const hasScore =
     match.homeScore !== null &&
     match.homeScore !== undefined &&

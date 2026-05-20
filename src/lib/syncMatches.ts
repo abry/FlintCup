@@ -13,6 +13,7 @@ type ExistingMatchDoc = {
   homeTeam: string;
   awayTeam: string;
   pitch: string | null;
+  venueName: string | null;
   homeScore: number | null;
   awayScore: number | null;
 };
@@ -44,11 +45,18 @@ export async function syncMatchesToSanity(
 
   const existingDocs = await client.fetch<ExistingMatchDoc[]>(
     `*[_type == "match" && defined(externalId)]{
-      _id, externalId, status, kickoff, homeTeam, awayTeam, pitch, homeScore, awayScore
+      _id, externalId, status, kickoff, homeTeam, awayTeam, pitch, venueName, homeScore, awayScore
     }`,
   );
   const existingByExternalId = new Map(existingDocs.map((d) => [d.externalId, d]));
   const seenIds = new Set<string>();
+
+  if (scraped.length === 0 && existingDocs.length > 0) {
+    summary.errors.push(
+      `Profixio returned 0 matches but ${existingDocs.length} exist in Sanity — refusing to cancel them.`,
+    );
+    return summary;
+  }
 
   for (const match of scraped) {
     seenIds.add(match.externalId);
@@ -68,6 +76,7 @@ export async function syncMatchesToSanity(
       awayTeam: match.awayTeam,
       weAre,
       pitch: match.pitch,
+      venueName: match.venueName,
       groupName,
       homeScore: match.homeScore,
       awayScore: match.awayScore,
@@ -95,6 +104,7 @@ export async function syncMatchesToSanity(
         existing.homeTeam !== match.homeTeam ||
         existing.awayTeam !== match.awayTeam ||
         (existing.pitch ?? null) !== (match.pitch ?? null) ||
+        (existing.venueName ?? null) !== (match.venueName ?? null) ||
         (existing.homeScore ?? null) !== (match.homeScore ?? null) ||
         (existing.awayScore ?? null) !== (match.awayScore ?? null) ||
         existing.status !== match.status;

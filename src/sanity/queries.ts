@@ -36,6 +36,7 @@ export const ourMatchesQuery = defineQuery(`
     awayTeam,
     weAre,
     pitch,
+    venueName,
     homeScore,
     awayScore,
     groupName,
@@ -53,6 +54,7 @@ export const groupMatchesQuery = defineQuery(`
     awayTeam,
     weAre,
     pitch,
+    venueName,
     homeScore,
     awayScore,
     "venue": venue->{ name, shortName }
@@ -74,6 +76,7 @@ export const scheduleQuery = defineQuery(`
       awayTeam,
       weAre,
       pitch,
+      venueName,
       homeScore,
       awayScore,
       status,
