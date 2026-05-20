@@ -1,14 +1,41 @@
-import { formatDay, formatTime, getDateKey } from "@/lib/formatTime";
+import { MatchCard } from "@/components/MatchCard";
+import { formatTime, formatDay, getDateKey } from "@/lib/formatTime";
 
-const TYPE_META: Record<string, { label: string; mark: string; tone?: string }> = {
-  match: { label: "Kamp", mark: "⚑", tone: "ember" },
-  meeting: { label: "Oppmøte", mark: "◎" },
-  travel: { label: "Kjøring", mark: "→" },
-  meal: { label: "Måltid", mark: "✱" },
-  checkin: { label: "Innsjekk", mark: "□" },
-  sleep: { label: "Hvile", mark: "·" },
-  info: { label: "Info", mark: "i" },
+const TYPE_META: Record<string, { icon: string; tile: string; time: string; text?: string }> = {
+  meeting: {
+    icon: "📍",
+    tile: "tile tile-meeting",
+    time: "tile-time tile-time-meeting",
+  },
+  info: {
+    icon: "📍",
+    tile: "tile tile-info",
+    time: "tile-time tile-time-info",
+  },
+  travel: {
+    icon: "🚗",
+    tile: "tile tile-travel",
+    time: "tile-time tile-time-travel",
+  },
+  meal: {
+    icon: "🍽",
+    tile: "tile tile-meal",
+    time: "tile-time tile-time-meal",
+  },
+  checkin: {
+    icon: "🛏",
+    tile: "tile tile-checkin",
+    time: "tile-time tile-time-checkin",
+  },
+  sleep: {
+    icon: "😴",
+    tile: "tile tile-sleep",
+    time: "tile-time tile-time-sleep",
+    text: "tile-text tile-text-sleep",
+  },
 };
+
+const DAY_NAMES_NB = ["Søndag", "Mandag", "Tirsdag", "Onsdag", "Torsdag", "Fredag", "Lørdag"];
 
 export type TimelineEntry = {
   _id: string;
@@ -16,6 +43,10 @@ export type TimelineEntry = {
   type: string;
   title: string;
   match?: {
+    _id?: string;
+    externalId?: string | null;
+    status?: string | null;
+    kickoff?: string | null;
     homeTeam?: string | null;
     awayTeam?: string | null;
     weAre?: string | null;
@@ -32,14 +63,16 @@ export type TimelineEntry = {
 export function Timeline({ entries }: { entries: TimelineEntry[] }) {
   if (entries.length === 0) {
     return (
-      <div className="programme-card p-6 text-center space-y-2">
-        <div className="label">Programmet trykkes</div>
-        <p className="font-display italic text-2xl text-[color:var(--ink-soft)]">
-          Kamper hentes automatisk fra Profixio
-        </p>
-        <p className="text-sm text-[color:var(--ink-mute)]">
-          Sjekk igjen om et øyeblikk eller kjør synk manuelt.
-        </p>
+      <div className="card-info">
+        <div
+          className="text-sm font-bold mb-2"
+          style={{ color: "var(--primary)" }}
+        >
+          Programmet trykkes ennå
+        </div>
+        <div className="text-sm" style={{ color: "var(--ink-mute)" }}>
+          Kampene hentes automatisk fra Profixio.
+        </div>
       </div>
     );
   }
@@ -47,123 +80,64 @@ export function Timeline({ entries }: { entries: TimelineEntry[] }) {
   const byDay = groupByDay(entries);
 
   return (
-    <div className="space-y-12">
-      {byDay.map(({ dateKey, entries: dayEntries }, dayIndex) => (
-        <section key={dateKey} className="rise" style={{ animationDelay: `${dayIndex * 80}ms` }}>
-          <div className="flex items-end justify-between gap-4 mb-4">
-            <div>
-              <span className="label">{`Dag ${dayIndex + 1}`}</span>
-              <h2 className="display-italic text-[clamp(1.875rem,5vw,2.5rem)] mt-0.5">
-                {formatDay(dayEntries[0].time)}
-              </h2>
-            </div>
-            <span className="text-[11px] tracking-[0.18em] uppercase text-[color:var(--ink-mute)]">
-              {dayEntries.length} punkter
-            </span>
-          </div>
-          <hr className="rule-double mb-2" />
-          <ol className="divide-y divide-[color:var(--rule-soft)]">
-            {dayEntries.map((entry, i) => (
-              <TimelineRow key={entry._id} entry={entry} index={i} />
-            ))}
-          </ol>
-          <hr className="rule mt-2" />
+    <div>
+      {byDay.map(({ entries: dayEntries }) => (
+        <section key={getDateKey(dayEntries[0].time)}>
+          <DayDivider iso={dayEntries[0].time} />
+          {dayEntries.map((entry) => (
+            <Row key={entry._id} entry={entry} />
+          ))}
         </section>
       ))}
     </div>
   );
 }
 
-function TimelineRow({ entry, index }: { entry: TimelineEntry; index: number }) {
-  const meta = TYPE_META[entry.type] ?? { label: entry.type, mark: "•" };
-  const isMatch = entry.type === "match";
-  const isOurMatch = entry.match?.weAre === "home" || entry.match?.weAre === "away";
-
-  const matchVenueLabel = entry.match
-    ? [
-        entry.match.venue?.shortName ??
-          entry.match.venue?.name ??
-          entry.match.venueName ??
-          null,
-        entry.match.pitch ? `bane ${entry.match.pitch}` : null,
-      ]
-        .filter(Boolean)
-        .join(" · ")
-    : "";
-  const where =
-    matchVenueLabel ||
-    entry.venue?.shortName ||
-    entry.venue?.name ||
-    entry.school?.name ||
-    null;
-
+function DayDivider({ iso }: { iso: string }) {
+  const d = new Date(iso);
+  const weekday = DAY_NAMES_NB[d.getDay()];
+  const dayMonth = formatDay(iso).replace(/^(\S+\s)/, ""); // drop weekday from "lørdag 23. mai"
   return (
-    <li
-      className="grid grid-cols-[3.5rem_1.5rem_1fr] items-baseline gap-x-4 py-3.5 rise"
-      style={{ animationDelay: `${index * 30}ms` }}
-    >
-      <time className="num font-display italic text-2xl tabular-nums text-[color:var(--ink)]">
-        {formatTime(entry.time)}
-      </time>
-      <span
-        aria-hidden
-        className={[
-          "self-baseline text-center font-display italic text-lg leading-none translate-y-[2px]",
-          meta.tone === "ember"
-            ? "text-[color:var(--ember)]"
-            : "text-[color:var(--ink-mute)]",
-        ].join(" ")}
-      >
-        {meta.mark}
-      </span>
-      <div className="min-w-0">
-        <div className="flex items-baseline gap-2 flex-wrap">
-          <span
-            className={[
-              "font-display tracking-[-0.01em]",
-              isMatch ? "text-[clamp(1.125rem,3.4vw,1.375rem)]" : "text-lg",
-              isOurMatch ? "font-semibold" : "font-medium",
-            ].join(" ")}
-            style={{ fontVariationSettings: '"opsz" 24, "wght" 520' }}
-          >
-            {entry.title}
-          </span>
-          <span className="smallcaps text-[10px] text-[color:var(--ink-mute)]">
-            {meta.label}
-          </span>
-        </div>
-        {entry.match ? <MatchSummary match={entry.match} /> : null}
-        {where ? (
-          <div className="text-[12px] text-[color:var(--ink-mute)] mt-1 tracking-[0.02em]">
-            {where}
-          </div>
-        ) : null}
-      </div>
-    </li>
+    <div className="day-divider">
+      <span>🗓 {weekday} {dayMonth}</span>
+    </div>
   );
 }
 
-function MatchSummary({ match }: { match: NonNullable<TimelineEntry["match"]> }) {
-  const ourHome = match.weAre === "home";
-  const hasScore =
-    match.homeScore !== null &&
-    match.homeScore !== undefined &&
-    match.awayScore !== null &&
-    match.awayScore !== undefined;
+function Row({ entry }: { entry: TimelineEntry }) {
+  if (entry.type === "match" && entry.match) {
+    return (
+      <MatchCard
+        match={{
+          externalId: entry.match.externalId ?? null,
+          status: entry.match.status ?? "scheduled",
+          kickoff: entry.match.kickoff ?? entry.time,
+          homeTeam: entry.match.homeTeam ?? "",
+          awayTeam: entry.match.awayTeam ?? "",
+          weAre: (entry.match.weAre as "home" | "away" | "none") ?? "none",
+          pitch: entry.match.pitch ?? null,
+          venueName: entry.match.venueName ?? null,
+          homeScore: entry.match.homeScore ?? null,
+          awayScore: entry.match.awayScore ?? null,
+          venue: entry.match.venue
+            ? {
+                name: entry.match.venue.name ?? null,
+                shortName: entry.match.venue.shortName ?? null,
+              }
+            : null,
+        }}
+      />
+    );
+  }
+
+  const meta = TYPE_META[entry.type] ?? TYPE_META.info;
+
   return (
-    <div className="mt-1.5 text-[14px] text-[color:var(--ink-soft)] leading-tight">
-      <span className={ourHome ? "font-medium text-[color:var(--ink)]" : ""}>
-        {match.homeTeam}
+    <div className={meta.tile}>
+      <span className={meta.time}>{formatTime(entry.time)}</span>
+      <span className={meta.text ?? "tile-text"}>
+        {meta.icon} {entry.title}
       </span>
-      <span className="text-[color:var(--rule)] mx-2 italic font-display">vs.</span>
-      <span className={!ourHome ? "font-medium text-[color:var(--ink)]" : ""}>
-        {match.awayTeam}
-      </span>
-      {hasScore ? (
-        <span className="ml-2 font-display font-semibold num">
-          ({match.homeScore}–{match.awayScore})
-        </span>
-      ) : null}
     </div>
   );
 }

@@ -21,89 +21,91 @@ type Player = {
 export default async function TeamPage() {
   const players = await sanityFetch<Player[]>(playersQuery);
 
-  return (
-    <article className="space-y-8">
-      <header className="rise">
-        <span className="label">Sak 04</span>
-        <h2
-          className="display-italic mt-2 text-[clamp(2.25rem,7.5vw,3.25rem)]"
-          style={{ fontVariationSettings: '"opsz" 144, "wght" 380' }}
+  if (players.length === 0) {
+    return (
+      <div className="card-info">
+        <div
+          className="text-sm font-bold mb-2"
+          style={{ color: "var(--primary)" }}
         >
-          Mannskapet
-        </h2>
-        <p className="mt-3 max-w-md text-[15px] text-[color:var(--ink-soft)] leading-relaxed">
-          Stallen og foreldrekontakter for {players.length || "—"}{" "}
-          spillere. Trykk på nummer for å ringe.
-        </p>
-        <hr className="rule-double mt-6" />
-      </header>
-
-      {players.length === 0 ? (
-        <div className="programme-card p-6 text-center">
-          <span className="stamp">Tomt rosterskap</span>
-          <p className="font-display italic text-xl mt-3">
-            Trener legger spillerne inn i Studio.
-          </p>
+          👥 Spillerliste
         </div>
-      ) : (
-        <ol className="space-y-0">
-          {players.map((p, i) => (
-            <li
-              key={p._id}
-              className="border-b border-[color:var(--rule-soft)] py-5 rise"
-              style={{ animationDelay: `${i * 30}ms` }}
+        <p className="text-sm" style={{ color: "var(--ink-mute)" }}>
+          Trener legger inn spillere og foreldrekontakter i Studio.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="day-divider">
+        <span>👥 Mannskap</span>
+      </div>
+      {players.map((p) => (
+        <div
+          key={p._id}
+          className="rounded-xl border p-3 mb-2"
+          style={{
+            background: "var(--surface)",
+            borderColor: "var(--border)",
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <span
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm font-bold tabular-nums shrink-0"
+              style={{
+                background: "var(--primary-bg)",
+                color: "var(--primary)",
+              }}
             >
-              <div className="grid grid-cols-[3.5rem_1fr] gap-4 items-baseline">
-                <span className="display-italic num text-4xl tabular-nums text-[color:var(--ember)]">
-                  {p.shirtNumber !== null
-                    ? String(p.shirtNumber).padStart(2, "0")
-                    : "—"}
-                </span>
-                <div className="min-w-0">
-                  <div
-                    className="font-display text-xl tracking-[-0.01em]"
-                    style={{ fontVariationSettings: '"opsz" 36, "wght" 560' }}
-                  >
-                    {p.name}
-                  </div>
-                  {p.position ? (
-                    <div className="smallcaps text-[10.5px] text-[color:var(--ink-mute)] mt-0.5">
-                      {p.position}
-                    </div>
-                  ) : null}
-                  {p.parents && p.parents.length > 0 ? (
-                    <ul className="mt-2 space-y-0.5 text-sm">
-                      {p.parents.map((parent, j) => (
-                        <li
-                          key={j}
-                          className="flex flex-wrap gap-x-3 text-[color:var(--ink-mute)]"
-                        >
-                          <span className="text-[color:var(--ink)] font-medium">
-                            {parent.name ?? "—"}
-                          </span>
-                          {parent.phone ? (
-                            <a
-                              href={`tel:${parent.phone}`}
-                              className="num link-edit"
-                            >
-                              {parent.phone}
-                            </a>
-                          ) : null}
-                          {parent.carSeats ? (
-                            <span className="num">
-                              {parent.carSeats} bilplasser
-                            </span>
-                          ) : null}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </div>
+              {p.shirtNumber !== null ? p.shirtNumber : "–"}
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-bold" style={{ color: "var(--ink)" }}>
+                {p.name}
               </div>
-            </li>
-          ))}
-        </ol>
-      )}
-    </article>
+              {p.position ? (
+                <div className="text-xs" style={{ color: "var(--ink-mute)" }}>
+                  {p.position}
+                </div>
+              ) : null}
+            </div>
+          </div>
+          {p.parents && p.parents.length > 0 ? (
+            <ul className="mt-2 space-y-1 text-xs">
+              {p.parents.map((parent, j) => (
+                <li
+                  key={j}
+                  className="flex flex-wrap gap-x-2"
+                  style={{ color: "var(--ink-mute)" }}
+                >
+                  <span
+                    className="font-semibold"
+                    style={{ color: "var(--ink)" }}
+                  >
+                    {parent.name ?? "—"}
+                  </span>
+                  {parent.phone ? (
+                    <a
+                      href={`tel:${parent.phone}`}
+                      className="tabular-nums underline underline-offset-2"
+                      style={{ color: "var(--primary)" }}
+                    >
+                      {parent.phone}
+                    </a>
+                  ) : null}
+                  {parent.carSeats ? (
+                    <span className="tabular-nums">
+                      {parent.carSeats} plasser
+                    </span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ))}
+    </div>
   );
 }

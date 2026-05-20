@@ -15,163 +15,83 @@ export type MatchCardData = {
   matchNumber?: number | null;
 };
 
-type Props = {
-  match: MatchCardData;
-  emphasis?: "hero" | "default";
-};
+const OUR_TEAM_HINT = "Sprint-Jeløy";
 
-export function MatchCard({ match, emphasis = "default" }: Props) {
+export function MatchCard({ match }: { match: MatchCardData }) {
   const isOurs = match.weAre !== "none";
   const ourHome = match.weAre === "home";
-  const venueLabel = [
-    match.venue?.shortName ?? match.venue?.name ?? match.venueName ?? null,
-    match.pitch ? `bane ${match.pitch}` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const ourAway = match.weAre === "away";
+
+  const venue = match.venueName ?? match.venue?.name ?? null;
+  const pitch = match.pitch ? `b.${match.pitch}` : null;
+  const venueLabel =
+    venue && pitch
+      ? `${shortenVenue(venue)} ${pitch}`
+      : (venue && shortenVenue(venue)) || pitch || "TBD";
+
   const hasScore =
     match.homeScore !== null &&
     match.homeScore !== undefined &&
     match.awayScore !== null &&
     match.awayScore !== undefined;
 
-  const status = match.status;
-
   return (
-    <article
-      className={[
-        "programme-card relative",
-        emphasis === "hero" ? "p-6 sm:p-8" : "p-5",
-      ].join(" ")}
-    >
-      <header className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          {match.matchNumber ? (
-            <span className="badge-number num shrink-0">
-              {match.matchNumber}
-            </span>
-          ) : null}
-          <div className="space-y-0.5">
-            <div className="label">Kickoff · Lørdag</div>
-            <time
-              className={[
-                "block display-italic num",
-                emphasis === "hero"
-                  ? "text-[clamp(3.5rem,16vw,5.5rem)]"
-                  : "text-5xl",
-              ].join(" ")}
-            >
-              {formatTime(match.kickoff)}
-            </time>
-          </div>
-        </div>
-        <div className="flex flex-col items-end gap-1.5 shrink-0">
-          {isOurs ? (
-            <span className="pill pill-ember">
-              <SparkIcon /> Vår kamp
-            </span>
-          ) : null}
-          {status === "cancelled" ? (
-            <span className="pill pill-cancelled">Avlyst</span>
-          ) : status === "played" ? (
-            <span className="pill pill-played">Spilt</span>
-          ) : status === "live" ? (
-            <span className="pill pill-ember pulse-soft">Pågår</span>
-          ) : null}
-        </div>
-      </header>
-      <hr className="rule-dashed mt-5 mb-4" />
-      <div className="space-y-2">
-        <TeamRow
-          name={match.homeTeam}
-          score={match.homeScore}
-          highlight={ourHome}
-          showScore={hasScore}
-          side="H"
-        />
-        <TeamRow
-          name={match.awayTeam}
-          score={match.awayScore}
-          highlight={!ourHome && isOurs}
-          showScore={hasScore}
-          side="B"
-        />
-      </div>
-      {venueLabel ? (
-        <>
-          <hr className="rule mt-5 mb-3" />
-          <div className="flex items-center justify-between text-[12px] tracking-[0.04em] text-[color:var(--ink-mute)]">
-            <span className="smallcaps text-[10.5px]">{venueLabel}</span>
-            {match.externalId ? (
-              <a
-                href={`https://www.profixio.com/app/flint-u14-cup-2026/match/${match.externalId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="link-edit smallcaps text-[10.5px]"
-              >
-                Profixio →
-              </a>
-            ) : null}
-          </div>
-        </>
-      ) : null}
-    </article>
-  );
-}
-
-function TeamRow({
-  name,
-  score,
-  highlight,
-  showScore,
-  side,
-}: {
-  name: string;
-  score: number | null;
-  highlight: boolean;
-  showScore: boolean;
-  side: "H" | "B";
-}) {
-  return (
-    <div
-      className={[
-        "grid grid-cols-[1.25rem_1fr_auto] items-baseline gap-3",
-        highlight ? "text-[color:var(--ink)]" : "text-[color:var(--ink-soft)]",
-      ].join(" ")}
-    >
+    <div className="tile tile-match">
       <span
-        className="font-display italic num text-base text-[color:var(--ink-mute)]"
-        aria-hidden
+        className="tile-time tile-time-match"
+        style={{ color: "var(--amber-warm)" }}
       >
-        {side}
+        {formatTime(match.kickoff)}
+      </span>
+      <span className="flex-1 text-sm">
+        <span
+          style={{
+            color: ourHome ? "var(--primary)" : "var(--ink)",
+            fontWeight: ourHome ? 700 : 500,
+          }}
+        >
+          {match.homeTeam}
+        </span>
+        <span className="mx-1.5" style={{ color: "var(--ink-muter)" }}>
+          –
+        </span>
+        <span
+          style={{
+            color: ourAway ? "var(--primary)" : "var(--ink)",
+            fontWeight: ourAway ? 700 : 500,
+          }}
+        >
+          {match.awayTeam}
+        </span>
+        {hasScore ? (
+          <span
+            className="ml-2 text-xs font-bold tabular-nums"
+            style={{ color: "var(--ink)" }}
+          >
+            {match.homeScore}–{match.awayScore}
+          </span>
+        ) : null}
+        {!isOurs ? (
+          <span className="ml-1" style={{ color: "var(--ink-muter)" }}>
+            {" "}
+          </span>
+        ) : null}
       </span>
       <span
-        className={[
-          "font-display truncate",
-          highlight ? "font-semibold" : "font-medium",
-        ].join(" ")}
-        style={{
-          fontVariationSettings: '"opsz" 32, "wght" ' + (highlight ? "560" : "440"),
-          fontSize: "clamp(1.125rem, 4vw, 1.375rem)",
-          letterSpacing: "-0.01em",
-        }}
+        className="text-xs px-2 py-0.5 rounded-lg font-medium whitespace-nowrap"
+        style={{ background: "var(--primary)", color: "#fff" }}
+        title={[venue, pitch].filter(Boolean).join(" ")}
       >
-        {name}
-      </span>
-      <span className="num font-display font-semibold text-2xl tabular-nums">
-        {showScore ? (score ?? "–") : <span className="text-[color:var(--rule)]">–</span>}
+        {venueLabel}
       </span>
     </div>
   );
 }
 
-function SparkIcon() {
-  return (
-    <svg viewBox="0 0 12 12" className="w-3 h-3 -ml-0.5" aria-hidden>
-      <path
-        d="M6 0L7 4.5L11.5 6L7 7.5L6 12L5 7.5L0.5 6L5 4.5Z"
-        fill="currentColor"
-      />
-    </svg>
-  );
+function shortenVenue(name: string): string {
+  if (/ESSO/i.test(name)) return "ESSO";
+  if (/Tønsberg Gressbane/i.test(name)) return "T. Gress.";
+  if (/Åsgårdstrand/i.test(name)) return "Åsgård.";
+  if (/Greveskogen/i.test(name)) return "Grevesk.";
+  return name.length > 10 ? name.slice(0, 10).trimEnd() + "." : name;
 }

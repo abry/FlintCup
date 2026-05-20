@@ -19,124 +19,106 @@ export default async function AccommodationPage() {
 
   if (!school) {
     return (
-      <article className="space-y-8">
-        <Heading />
-        <div className="programme-card p-6 space-y-2 text-center">
-          <span className="stamp">Innhold mangler</span>
-          <p className="font-display italic text-xl mt-2">
-            Trener legger inn skole, regler og pakkeliste i Studio.
-          </p>
+      <div className="card-info">
+        <div
+          className="text-sm font-bold mb-2"
+          style={{ color: "var(--amber)" }}
+        >
+          Innhold mangler
         </div>
-      </article>
+        <p className="text-sm" style={{ color: "var(--ink-mute)" }}>
+          Skole, regler og pakkeliste legges inn i Studio.
+        </p>
+      </div>
     );
   }
 
   return (
-    <article className="space-y-8">
-      <Heading />
-      <section className="programme-card p-6 rise">
-        <div className="flex items-baseline justify-between gap-3">
-          <div>
-            <span className="smallcaps text-[10.5px] text-[color:var(--ink-mute)]">
-              Skole
-            </span>
-            <h3
-              className="display-italic text-[clamp(2rem,6vw,2.75rem)] mt-1"
-              style={{ fontVariationSettings: '"opsz" 96, "wght" 400' }}
-            >
-              {school.name}
-            </h3>
-            {school.address ? (
-              <p className="text-sm text-[color:var(--ink-mute)] mt-1">
-                {school.address}
-              </p>
-            ) : null}
-          </div>
-          <span className="stamp stamp-ember">Husvik</span>
+    <div className="space-y-3">
+      <div
+        className="rounded-xl border p-4"
+        style={{
+          background: "var(--surface)",
+          borderColor: "var(--border)",
+        }}
+      >
+        <div
+          className="text-sm font-bold mb-2"
+          style={{ color: "var(--primary)" }}
+        >
+          🏠 {school.name}
         </div>
-        <hr className="rule-dashed my-5" />
-        <div className="grid grid-cols-2 gap-6 text-center">
-          <ClockField label="Innsjekk" value={school.checkInTime ?? "—"} />
-          <ClockField label="Utsjekk" value={school.checkOutTime ?? "—"} />
+        <div
+          className="text-sm leading-relaxed space-y-1"
+          style={{ color: "var(--ink-mute)" }}
+        >
+          {school.address ? <p>📍 {school.address}</p> : null}
+          <p>
+            Innsjekk{" "}
+            <strong style={{ color: "var(--ink)" }}>
+              {school.checkInTime ?? "19:00"}
+            </strong>
+          </p>
+          <p>
+            Utsjekk{" "}
+            <strong style={{ color: "var(--red)" }}>
+              {school.checkOutTime ?? "11:00"}
+            </strong>
+          </p>
         </div>
-      </section>
+      </div>
 
       {school.rules ? (
-        <Column
-          label="Sak 03A"
-          title="Regler & rytme"
-          body={school.rules}
-          delay={120}
-        />
+        <Panel title="📋 Regler & rytme" body={school.rules} />
       ) : null}
 
       {school.packingList ? (
-        <Column
-          label="Sak 03B"
-          title="Pakk dette"
-          body={school.packingList}
-          delay={200}
-        />
+        <Panel title="🎒 Pakkeliste" body={school.packingList} />
       ) : null}
-    </article>
-  );
-}
 
-function Heading() {
-  return (
-    <header className="rise">
-      <span className="label">Sak 03</span>
-      <h2
-        className="display-italic mt-2 text-[clamp(2.25rem,7.5vw,3.25rem)]"
-        style={{ fontVariationSettings: '"opsz" 144, "wght" 380' }}
-      >
-        Innkvartering
-      </h2>
-      <p className="mt-3 max-w-md text-[15px] text-[color:var(--ink-soft)] leading-relaxed">
-        Praktisk informasjon om overnattingen — tider, regler og hva som
-        bør pakkes ned før avreise.
-      </p>
-      <hr className="rule-double mt-6" />
-    </header>
-  );
-}
-
-function ClockField({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="smallcaps text-[10.5px] text-[color:var(--ink-mute)]">
-        {label}
-      </div>
-      <div className="display-italic num text-5xl mt-1 tabular-nums">
-        {value}
+      <div className="card-warning">
+        <div
+          className="text-sm font-bold mb-1"
+          style={{ color: "var(--red)" }}
+        >
+          ⚠️ Utsjekk siste dag kl 11:00
+        </div>
+        <p className="text-sm" style={{ color: "var(--ink-mute)" }}>
+          Rom leveres i samme stand som ved innsjekk. Bagasje kan ikke
+          oppbevares etter dette.
+        </p>
       </div>
     </div>
   );
 }
 
-function Column({
-  label,
+function Panel({
   title,
   body,
-  delay,
 }: {
-  label: string;
   title: string;
   body: PortableTextBlock[];
-  delay: number;
 }) {
   return (
-    <section className="rise" style={{ animationDelay: `${delay}ms` }}>
-      <span className="label">{label}</span>
-      <h3
-        className="display-italic text-2xl mt-1 mb-3"
-        style={{ fontVariationSettings: '"opsz" 36, "wght" 520' }}
+    <div
+      className="rounded-xl border p-4"
+      style={{
+        background: "var(--surface)",
+        borderColor: "var(--border)",
+      }}
+    >
+      <div
+        className="text-sm font-bold mb-2"
+        style={{ color: "var(--primary)" }}
       >
         {title}
-      </h3>
-      <div className="prose-feel space-y-2 text-[15px] leading-relaxed text-[color:var(--ink-soft)]">
+      </div>
+      <div
+        className="text-sm leading-relaxed space-y-1 [&_p]:my-0.5 [&_ul]:list-disc [&_ul]:pl-5"
+        style={{ color: "var(--ink-mute)" }}
+      >
         <PortableText value={body} />
       </div>
-    </section>
+    </div>
   );
 }
